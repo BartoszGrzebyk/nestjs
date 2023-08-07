@@ -8,16 +8,28 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
   constructor(private configService: ConfigService) {}
 
   createTypeOrmOptions(): TypeOrmModuleOptions | Promise<TypeOrmModuleOptions> {
-    const cl = require('../migrations/1691431579595-initial-schema');
-    return {
-      type: 'sqlite',
-      synchronize: false,
-      database: this.configService.get<string>('DB_NAME'),
-      autoLoadEntities: true,
-      migrationsRun: process.env.NODE_ENV === 'test',
-      keepConnectionAlive: process.env.NODE_ENV === 'test',
-      migrations: [InitialSchema1691431579595],
-      //   dropSchema: true,
-    };
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        type: 'postgres',
+        synchronize: false,
+        url: process.env.DATABASE_URL,
+        database: this.configService.get<string>('DB_NAME'),
+        autoLoadEntities: true,
+        migrationsRun: true,
+        migrations: [InitialSchema1691431579595],
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      };
+    } else {
+      return {
+        type: 'sqlite',
+        synchronize: false,
+        database: this.configService.get<string>('DB_NAME'),
+        autoLoadEntities: true,
+        migrationsRun: process.env.NODE_ENV === 'test',
+        migrations: [InitialSchema1691431579595],
+      };
+    }
   }
 }
